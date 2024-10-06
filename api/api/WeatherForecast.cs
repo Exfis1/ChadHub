@@ -1,4 +1,4 @@
-namespace BackChad
+namespace api
 {
     public class WeatherForecast
     {

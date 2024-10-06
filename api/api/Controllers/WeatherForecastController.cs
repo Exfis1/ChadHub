@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace BackChad.Controllers
+namespace api.Controllers
 {
     [ApiController]
     [Route("[controller]")]
