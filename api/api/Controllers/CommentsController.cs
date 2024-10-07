@@ -59,7 +59,8 @@ namespace api.Controllers
             var comment = new Comment
             {
                 Content = createCommentDto.Content,
-                PostId = postId
+                PostId = postId,
+                CreatedAt = DateTime.UtcNow
             };
 
             _context.Comments.Add(comment);

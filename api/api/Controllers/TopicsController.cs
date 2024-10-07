@@ -1,5 +1,6 @@
 ﻿using api.Data.Entities;
 using api.Data;
+using api.Data.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -49,7 +50,8 @@ namespace api.Controllers
             var topic = new Topic
             {
                 Title = createTopicDto.Title,
-                Description = createTopicDto.Description
+                Description = createTopicDto.Description,
+                CreatedAt = DateTime.UtcNow
             };
 
             _context.Topics.Add(topic);

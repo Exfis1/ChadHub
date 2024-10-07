@@ -2,6 +2,7 @@
 using api.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using api.Data.DTOs;
 
 namespace api.Controllers
 {
@@ -59,7 +60,8 @@ namespace api.Controllers
             {
                 Title = createPostDto.Title,
                 Body = createPostDto.Body,
-                TopicId = topicId
+                TopicId = topicId,
+                CreatedAt = DateTime.UtcNow
             };
 
             _context.Posts.Add(post);
