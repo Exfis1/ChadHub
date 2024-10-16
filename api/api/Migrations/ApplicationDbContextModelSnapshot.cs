@@ -44,7 +44,7 @@ namespace api.Migrations
 
                     b.HasIndex("PostId");
 
-                    b.ToTable("Comments");
+                    b.ToTable("Comments", (string)null);
                 });
 
             modelBuilder.Entity("api.Data.Entities.Post", b =>
@@ -73,7 +73,7 @@ namespace api.Migrations
 
                     b.HasIndex("TopicId");
 
-                    b.ToTable("Posts");
+                    b.ToTable("Posts", (string)null);
                 });
 
             modelBuilder.Entity("api.Data.Entities.Topic", b =>
@@ -100,7 +100,7 @@ namespace api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Topics");
+                    b.ToTable("Topics", (string)null);
                 });
 
             modelBuilder.Entity("api.Data.Entities.Comment", b =>
