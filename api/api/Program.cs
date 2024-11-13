@@ -27,8 +27,12 @@ builder.Services.AddControllers()
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHttpContextAccessor();
 
+
+builder.Services.AddResponseCaching();
 builder.Services.AddTransient<JwtTokenService>();
+builder.Services.AddTransient<SessionService>();
 builder.Services.AddScoped<AuthSeeder>();
 
 // Configure EF Core to use SQL Server

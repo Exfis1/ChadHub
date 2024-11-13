@@ -12,6 +12,7 @@ namespace api.Data
         public DbSet<Topic> Topics { get; set; }
         public DbSet<Post> Posts { get; set; }
         public DbSet<Comment> Comments { get; set; }
+        public DbSet<Session> Sessions { get; set; }
 
         // Constructor accepting DbContextOptions and IConfiguration
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options){ }

@@ -38,7 +38,7 @@ namespace api.Auth
             });
 
             //Login
-            app.MapPost("api/v1/login", async (UserManager<ForumUser> userManager, JwtTokenService jwtTokenService, HttpContext httpContext , LoginUserDto dto) =>
+            app.MapPost("api/v1/login", async (UserManager<ForumUser> userManager, JwtTokenService jwtTokenService, SessionService sessionService, HttpContext httpContext , LoginUserDto dto) =>
             {
                 var user = await userManager.FindByNameAsync(dto.UserName);
                 if (user == null)
@@ -55,9 +55,12 @@ namespace api.Auth
 
                 var roles = await userManager.GetRolesAsync(user);
 
+                var sessionId = Guid.NewGuid();
                 var expiresAt = DateTime.UtcNow.AddDays(3);
                 var accessToken = jwtTokenService.CreateAccessToken(user.UserName, user.Id, roles);
-                var refreshToken = jwtTokenService.CreateRefreshToken(user.Id, expiresAt);
+                var refreshToken = jwtTokenService.CreateRefreshToken(sessionId, user.Id, expiresAt);
+
+                sessionService.CreateSessionAsync(sessionId, user.Id, refreshToken, expiresAt);
 
                 var cookieOptions = new CookieOptions
                 {
@@ -72,7 +75,8 @@ namespace api.Auth
                 return Results.Ok(new SuccessfulLoginDto(accessToken));
             });
 
-            app.MapPost("api/v1/accessToken", async (UserManager<ForumUser> userManager, JwtTokenService jwtTokenService, HttpContext httpContext) => 
+            //Refresh tokens (session)
+            app.MapPost("api/v1/accessToken", async (UserManager<ForumUser> userManager, JwtTokenService jwtTokenService, SessionService sessionService, HttpContext httpContext) => 
             {
                 if (!httpContext.Request.Cookies.TryGetValue("RefreshToken", out var refreshToken))
                 {
@@ -80,6 +84,18 @@ namespace api.Auth
                 }
 
                 if (!jwtTokenService.TryParseRefreshToken(refreshToken, out var claims))
+                {
+                    return Results.UnprocessableEntity();
+                }
+
+                var sessionId = claims.FindFirstValue("SessionId");
+                if (string.IsNullOrWhiteSpace(sessionId))
+                {
+                    return Results.UnprocessableEntity();
+                }
+
+                var sessionIdAsGuid = Guid.Parse(sessionId);
+                if (!await sessionService.IsSessionValidAsync(sessionIdAsGuid, refreshToken))
                 {
                     return Results.UnprocessableEntity();
                 }
@@ -96,7 +112,7 @@ namespace api.Auth
 
                 var expiresAt = DateTime.UtcNow.AddDays(3);
                 var accessToken = jwtTokenService.CreateAccessToken(user.UserName, user.Id, roles);
-                var newRefreshToken = jwtTokenService.CreateRefreshToken(user.Id, expiresAt);
+                var newRefreshToken = jwtTokenService.CreateRefreshToken(sessionIdAsGuid, user.Id, expiresAt);
 
                 var cookieOptions = new CookieOptions
                 {
@@ -108,7 +124,36 @@ namespace api.Auth
 
                 httpContext.Response.Cookies.Append("RefreshToken", newRefreshToken, cookieOptions);
 
+                await sessionService.ExtendSessionAsync(sessionIdAsGuid, newRefreshToken, expiresAt);
+
                 return Results.Ok(new SuccessfulLoginDto(accessToken));
+            });
+
+            //Logout
+            app.MapPost("api/v1/logout", async (UserManager<ForumUser> userManager, JwtTokenService jwtTokenService, SessionService sessionService, HttpContext httpContext) =>
+            {
+                if (!httpContext.Request.Cookies.TryGetValue("RefreshToken", out var refreshToken))
+                {
+                    return Results.UnprocessableEntity();
+                }
+
+                if (!jwtTokenService.TryParseRefreshToken(refreshToken, out var claims))
+                {
+                    return Results.UnprocessableEntity();
+                }
+
+                var sessionId = claims.FindFirstValue("SessionId");
+                if (string.IsNullOrWhiteSpace(sessionId))
+                {
+                    return Results.UnprocessableEntity();
+                }
+
+                var sessionIdAsGuid = Guid.Parse(sessionId);
+                
+                await sessionService.InvalidateSessionAsync(sessionIdAsGuid);
+                httpContext.Response.Cookies.Delete("RefreshToken");
+
+                return Results.Ok();
             });
         }
 
