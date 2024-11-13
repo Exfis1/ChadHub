@@ -3,6 +3,10 @@ using api.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using api.Data.DTOs;
+using api.Auth.Model;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Authorization;
 
 namespace api.Controllers
 {
@@ -46,6 +50,7 @@ namespace api.Controllers
         }
 
         // POST /topics/{topicId}/posts/{postId}/comments
+        [Authorize(Roles = ForumRoles.ForumUser)]
         [HttpPost]
         public async Task<ActionResult<Comment>> CreateComment(int topicId, int postId, [FromBody] CreateCommentDto createCommentDto)
         {
@@ -60,7 +65,8 @@ namespace api.Controllers
             {
                 Content = createCommentDto.Content,
                 PostId = postId,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                UserId = HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub)
             };
 
             _context.Comments.Add(comment);
@@ -70,6 +76,7 @@ namespace api.Controllers
         }
 
         // PUT /topics/{topicId}/posts/{postId}/comments/{commentId}
+        [Authorize]
         [HttpPut("{commentId}")]
         public async Task<ActionResult<Comment>> UpdateComment(int topicId, int postId, int commentId, [FromBody] UpdateCommentDto updateCommentDto)
         {
@@ -78,6 +85,12 @@ namespace api.Controllers
             if (comment == null || comment.PostId != postId)
             {
                 return NotFound();
+            }
+
+            if (!HttpContext.User.IsInRole(ForumRoles.Admin) &&
+                HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub) != comment.UserId)
+            {
+                return Forbid();
             }
 
             comment.Content = updateCommentDto.Content;

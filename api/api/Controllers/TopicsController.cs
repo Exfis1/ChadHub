@@ -3,6 +3,10 @@ using api.Data;
 using api.Data.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using api.Auth.Model;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace api.Controllers
 {
@@ -39,6 +43,7 @@ namespace api.Controllers
         }
 
         // POST /topics
+        [Authorize(Roles = ForumRoles.ForumUser)]
         [HttpPost]
         public async Task<ActionResult<Topic>> CreateTopic([FromBody] CreateTopicDto createTopicDto)
         {
@@ -51,7 +56,8 @@ namespace api.Controllers
             {
                 Title = createTopicDto.Title,
                 Description = createTopicDto.Description,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                UserID = HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub)
             };
 
             _context.Topics.Add(topic);
@@ -61,6 +67,7 @@ namespace api.Controllers
         }
 
         // PUT /topics/{topicId}
+        [Authorize]
         [HttpPut("{topicId}")]
         public async Task<ActionResult<Topic>> UpdateTopic(int topicId, [FromBody] UpdateTopicDto updateTopicDto)
         {
@@ -69,6 +76,12 @@ namespace api.Controllers
             if (topic == null)
             {
                 return NotFound();
+            }
+
+            if (!HttpContext.User.IsInRole(ForumRoles.Admin) &&
+                HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub) != topic.UserID)
+            {
+                return Forbid();
             }
 
             topic.Description = updateTopicDto.Description;

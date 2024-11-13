@@ -3,6 +3,10 @@ using api.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using api.Data.DTOs;
+using api.Auth.Model;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace api.Controllers
 {
@@ -46,6 +50,7 @@ namespace api.Controllers
         }
 
         // POST /topics/{topicId}/posts
+        [Authorize(Roles = ForumRoles.ForumUser)]
         [HttpPost]
         public async Task<ActionResult<Post>> CreatePost(int topicId, [FromBody] CreatePostDto createPostDto)
         {
@@ -61,7 +66,9 @@ namespace api.Controllers
                 Title = createPostDto.Title,
                 Body = createPostDto.Body,
                 TopicId = topicId,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                UserId = HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+
             };
 
             _context.Posts.Add(post);
@@ -71,6 +78,7 @@ namespace api.Controllers
         }
 
         // PUT /topics/{topicId}/posts/{postId}
+        [Authorize]
         [HttpPut("{postId}")]
         public async Task<ActionResult<Post>> UpdatePost(int topicId, int postId, [FromBody] UpdatePostDto updatePostDto)
         {
@@ -79,6 +87,11 @@ namespace api.Controllers
             if (post == null || post.TopicId != topicId)
             {
                 return NotFound();
+            }
+            if (!HttpContext.User.IsInRole(ForumRoles.Admin) &&
+                HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub) != post.UserId)
+            {
+                return Forbid();
             }
 
             post.Body = updatePostDto.Body;

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using api.Auth.Model;
+using Microsoft.Extensions.Hosting;
 
 namespace api.Data.Entities
 {
@@ -13,6 +14,9 @@ namespace api.Data.Entities
         // Only can be set/seen by admin
         public bool IsHidden { get; set; }
         public ICollection<Post> Posts { get; set; }
+
+        public required string UserID { get; set; }
+        public ForumUser User { get; set; }
 
     }
 }

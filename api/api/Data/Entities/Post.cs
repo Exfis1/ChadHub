@@ -1,4 +1,6 @@
-﻿namespace api.Data.Entities
+﻿using api.Auth.Model;
+
+namespace api.Data.Entities
 {
     public class Post
     {
@@ -11,5 +13,9 @@
         public Topic Topic { get; set; }
 
         public ICollection<Comment> Comments { get; set; }
+
+        // Relationship to ForumUser
+        public required string UserId { get; set; }
+        public ForumUser User { get; set; }
     }
 }
