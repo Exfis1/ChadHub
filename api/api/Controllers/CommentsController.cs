@@ -60,7 +60,8 @@ namespace api.Controllers
             {
                 Content = createCommentDto.Content,
                 PostId = postId,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                UserId = ""
             };
 
             _context.Comments.Add(comment);

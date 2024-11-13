@@ -1,4 +1,6 @@
-﻿namespace api.Data.Entities
+﻿using api.Auth.Model;
+
+namespace api.Data.Entities
 {
     public class Comment
     {
@@ -8,5 +10,9 @@
 
         public int PostId { get; set; }
         public Post Post { get; set; }
+
+        // Relationship to ForumUser
+        public required string UserId { get; set; }
+        public ForumUser User { get; set; }
     }
 }

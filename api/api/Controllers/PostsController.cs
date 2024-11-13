@@ -61,7 +61,9 @@ namespace api.Controllers
                 Title = createPostDto.Title,
                 Body = createPostDto.Body,
                 TopicId = topicId,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                UserId = ""
+
             };
 
             _context.Posts.Add(post);

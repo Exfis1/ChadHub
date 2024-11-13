@@ -51,7 +51,8 @@ namespace api.Controllers
             {
                 Title = createTopicDto.Title,
                 Description = createTopicDto.Description,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                UserID = ""
             };
 
             _context.Topics.Add(topic);
