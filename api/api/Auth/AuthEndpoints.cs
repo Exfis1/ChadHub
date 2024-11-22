@@ -60,7 +60,7 @@ namespace api.Auth
                 var accessToken = jwtTokenService.CreateAccessToken(user.UserName, user.Id, roles);
                 var refreshToken = jwtTokenService.CreateRefreshToken(sessionId, user.Id, expiresAt);
 
-                sessionService.CreateSessionAsync(sessionId, user.Id, refreshToken, expiresAt);
+                await sessionService.CreateSessionAsync(sessionId, user.Id, refreshToken, expiresAt);
 
                 var cookieOptions = new CookieOptions
                 {

@@ -93,6 +93,7 @@ namespace api.Controllers
         }
 
         // DELETE /topics/{topicId}
+        [Authorize]
         [HttpDelete("{topicId}")]
         public async Task<IActionResult> DeleteTopic(int topicId)
         {
@@ -101,6 +102,12 @@ namespace api.Controllers
             if (topic == null)
             {
                 return NotFound();
+            }
+
+            if (!HttpContext.User.IsInRole(ForumRoles.Admin) &&
+               HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub) != topic.UserID)
+            {
+                return Forbid();
             }
 
             _context.Topics.Remove(topic);
