@@ -102,6 +102,7 @@ namespace api.Controllers
         }
 
         // DELETE /topics/{topicId}/posts/{postId}/comments/{commentId}
+        [Authorize]
         [HttpDelete("{commentId}")]
         public async Task<IActionResult> DeleteComment(int topicId, int postId, int commentId)
         {
@@ -110,6 +111,12 @@ namespace api.Controllers
             if (comment == null)
             {
                 return NotFound();
+            }
+
+            if (!HttpContext.User.IsInRole(ForumRoles.Admin) &&
+               HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub) != comment.UserId)
+            {
+                return Forbid();
             }
 
             _context.Comments.Remove(comment);
