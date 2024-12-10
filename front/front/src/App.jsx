@@ -6,6 +6,9 @@ import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Topics from "./pages/Topics"; // Import Topics Component
 import Profile from "./pages/Profile"; // Optional: Import Profile Page if created
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+
 
 function App() {
     return (
@@ -18,6 +21,8 @@ function App() {
                         <Route path="/" element={<Home />} />
                         <Route path="/topics" element={<Topics />} /> {/* Use Topics Component */}
                         <Route path="/profile" element={<Profile />} /> {/* Use Profile Component */}
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/register" element={<Register />} />
                     </Routes>
                 </main>
                 <Footer />

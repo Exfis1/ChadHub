@@ -8,10 +8,10 @@ const apiClient = axios.create({
     },
 });
 
-// Add a request interceptor to include the Authorization header if needed
+// Include Authorization token if available
 apiClient.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem("token"); // Assumes token is stored in localStorage
+        const token = localStorage.getItem("token"); // JWT token stored in localStorage
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }

@@ -12,6 +12,14 @@ using api.Auth;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod();
+    });
+});
+
 // Add services to the container.
 
 builder.Services.AddControllers()
@@ -58,6 +66,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+app.UseCors();
 
 using var scope = app.Services.CreateScope();
 

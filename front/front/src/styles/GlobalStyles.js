@@ -20,6 +20,20 @@ export const GlobalStyles = createGlobalStyle`
     text-decoration: none;
     color: inherit;
   }
+  button {
+        cursor: pointer;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        background-color: #00aced;
+        color: white;
+        font-size: 1rem;
+        transition: background-color 0.3s ease;
+
+        &:hover {
+            background-color: #007bb5;
+        }
+    }
 
   main {
     display: flex;
@@ -29,4 +43,21 @@ export const GlobalStyles = createGlobalStyle`
     justify-content: center;
     text-align: center;
   }
+  {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    body {
+        font-family: 'Arial', sans-serif;
+        background-color: #000;
+        color: white;
+        line-height: 1.6;
+        min-height: 100vh;
+    }
+    main {
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
 `;

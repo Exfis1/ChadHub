@@ -35,8 +35,8 @@ export default function Home() {
     return (
         <HomeContainer>
             <img src={logo} alt="ChadHub Logo" />
-            <h2>Welcome to the Forum</h2>
-            <p>Discuss, share, and connect with others.</p>
+            <h2>Welcome to the ChadHub Forum</h2>
+            <p>Here we share secrets with Chad community</p>
         </HomeContainer>
     );
 }
