@@ -45,7 +45,10 @@ builder.Services.AddScoped<AuthSeeder>();
 
 // Configure EF Core to use SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseMySql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        new MySqlServerVersion(new Version(8, 0, 31)) // Specify your MySQL version here
+    ));
 
 builder.Services.AddIdentity<ForumUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
