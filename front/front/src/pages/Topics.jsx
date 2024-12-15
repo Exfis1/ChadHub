@@ -1,36 +1,54 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
-import { getTopics } from "../services/topicsService";
+import { getTopics, createTopic, updateTopic, deleteTopic } from "../services/topicsService";
 
 const TopicsContainer = styled.main`
-margin-top: 3rem;
-    width: 100%;
-    text-align: center;
-
-    ul {
-        list-style: none;
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        padding: 0;
-
-        @media (max-width: 768px) {
-            li {
-                padding: 0.5rem;
-                a {
-                    font-size: 1rem;
-                }
-                p {
-                    font-size: 0.8rem;
-                }
-            }
-        }
-    }
+  margin-top: 3rem;
+  width: 100%;
+  text-align: center;
 
   h2 {
     font-size: 3rem;
     margin-bottom: 2rem;
+    color: white;
+  }
+
+  .form-container {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+
+    input,
+    textarea {
+      width: 200px;
+      padding: 0.75rem;
+      border: 1px solid #555;
+      border-radius: 5px;
+      background-color: #333;
+      color: white;
+      font-size: 1rem;
+    }
+
+    textarea {
+      resize: none;
+      height: 50px;
+    }
+
+    button {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 5px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s;
+
+      &:hover {
+        background-color: #0056b3;
+      }
+    }
   }
 
   ul {
@@ -38,39 +56,53 @@ margin-top: 3rem;
     padding: 0;
 
     li {
-      margin: 1rem 0;
+      margin: 1rem auto;
       background-color: #1f1f1f;
-      padding: 1rem;
+      padding: 1.5rem;
       border-radius: 8px;
-      width: 100%;
-      max-width: 600px;
+      max-width: 500px;
       text-align: left;
 
-      a {
-        font-size: 1.5rem;
+      h3 {
+        margin: 0 0 1rem;
         color: #00aced;
-        text-decoration: none;
-
-        &:hover {
-          text-decoration: underline;
-        }
       }
 
       p {
-        margin: 0.5rem 0 0;
+        margin-bottom: 1rem;
         color: #ccc;
       }
+
+      .buttons {
+        display: flex;
+        gap: 1rem;
+
+        button {
+          padding: 0.5rem 1rem;
+          border: none;
+          border-radius: 5px;
+          color: white;
+          cursor: pointer;
+          transition: background 0.3s;
+        }
+
+        .edit {
+          background-color: #ffc107;
+
+          &:hover {
+            background-color: #e0a800;
+          }
+        }
+
+        .delete {
+          background-color: #dc3545;
+
+          &:hover {
+            background-color: #c82333;
+          }
+        }
+      }
     }
-  }
-
-  .loader {
-    font-size: 1.5rem;
-    color: #ccc;
-  }
-
-  .error {
-    font-size: 1.2rem;
-    color: red;
   }
 `;
 
@@ -78,39 +110,105 @@ export default function Topics() {
     const [topics, setTopics] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [newTopic, setNewTopic] = useState({ title: "", description: "" });
+    const [editingTopic, setEditingTopic] = useState(null);
 
     useEffect(() => {
         const fetchTopics = async () => {
             try {
                 const data = await getTopics();
-                console.log("Fetched Topics Data:", data); // Debugging API response
-                setTopics(data || []); // Ensure we always set an array
+                setTopics(data || []);
             } catch (err) {
-                console.error("Error fetching topics:", err);
-                setError("Failed to fetch topics. Please try again later.");
+                setError("Failed to fetch topics.");
             } finally {
                 setLoading(false);
             }
         };
-
         fetchTopics();
     }, []);
+
+    const handleCreate = async () => {
+        try {
+            const created = await createTopic(newTopic);
+            setTopics([...topics, created]);
+            setNewTopic({ title: "", description: "" });
+        } catch (err) {
+            setError("Failed to create topic.");
+        }
+    };
+
+    const handleDelete = async (id) => {
+        try {
+            await deleteTopic(id);
+            setTopics(topics.filter((t) => t.id !== id));
+        } catch (err) {
+            setError("Failed to delete topic.");
+        }
+    };
+
+    const handleUpdate = async (id) => {
+        try {
+            const updated = await updateTopic(id, editingTopic);
+            setTopics(topics.map((t) => (t.id === id ? updated : t)));
+            setEditingTopic(null);
+        } catch (err) {
+            setError("Failed to update topic.");
+        }
+    };
 
     return (
         <TopicsContainer>
             <h2>Topics</h2>
-            {loading && <div className="loader">Loading topics...</div>}
-            {error && <div className="error">{error}</div>}
-            {!loading && !error && (
-                <ul>
-                    {topics.map((topic) => (
-                        <li key={topic.id}>
-                            <Link to={`/topics/${topic.id}`}>{topic.title}</Link>
-                            <p>{topic.description}</p>
-                        </li>
-                    ))}
-                </ul>
-            )}
+            <div className="form-container">
+                <input
+                    type="text"
+                    placeholder="Title"
+                    value={newTopic.title}
+                    onChange={(e) => setNewTopic({ ...newTopic, title: e.target.value })}
+                />
+                <textarea
+                    placeholder="Description"
+                    value={newTopic.description}
+                    onChange={(e) => setNewTopic({ ...newTopic, description: e.target.value })}
+                ></textarea>
+                <button onClick={handleCreate}>Create Topic</button>
+            </div>
+
+            {error && <div style={{ color: "red" }}>{error}</div>}
+            <ul>
+                {topics.map((topic) => (
+                    <li key={topic.id}>
+                        <h3>{topic.title}</h3>
+                        <p>{topic.description}</p>
+                        <div className="buttons">
+                            <button className="edit" onClick={() => setEditingTopic(topic)}>
+                                Edit
+                            </button>
+                            <button className="delete" onClick={() => handleDelete(topic.id)}>
+                                Delete
+                            </button>
+                        </div>
+                        {editingTopic && editingTopic.id === topic.id && (
+                            <div className="form-container">
+                                <input
+                                    type="text"
+                                    value={editingTopic.title}
+                                    onChange={(e) =>
+                                        setEditingTopic({ ...editingTopic, title: e.target.value })
+                                    }
+                                />
+                                <textarea
+                                    value={editingTopic.description}
+                                    onChange={(e) =>
+                                        setEditingTopic({ ...editingTopic, description: e.target.value })
+                                    }
+                                ></textarea>
+                                <button onClick={() => handleUpdate(topic.id)}>Save</button>
+                            </div>
+                        )}
+                    </li>
+                ))}
+            </ul>
         </TopicsContainer>
     );
 }
