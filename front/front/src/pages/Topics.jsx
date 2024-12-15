@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { getTopics, createTopic, updateTopic, deleteTopic } from "../services/topicsService";
+import { getUserNameById } from "../services/authService";
 
 const TopicsContainer = styled.main`
   margin-top: 3rem;
@@ -66,12 +67,21 @@ const TopicsContainer = styled.main`
     }
   }
 }
+li p {
+    color: #ccc; /* Default color for description */
+}
 
+li p:last-of-type {
+    color: #aaa; /* Lighter color for "Created by" text */
+    font-size: 0.9rem; /* Smaller font size */
+    margin-top: 0.5rem;
+}
   ul {
     list-style: none;
     padding: 0;
 
     li {
+        
       margin: 1rem auto;
       background-color: #1f1f1f;
       padding: 1.5rem;
@@ -139,7 +149,13 @@ export default function Topics() {
         const fetchTopics = async () => {
             try {
                 const data = await getTopics();
-                setTopics(data || []);
+                const topicsWithUsernames = await Promise.all(
+                    data.map(async (topic) => {
+                        const userName = await getUserNameById(topic.userID);
+                        return { ...topic, userName };
+                    })
+                );
+                setTopics(topicsWithUsernames); // Update topics state with usernames
             } catch (err) {
                 setError("Failed to fetch topics.");
             } finally {
@@ -151,10 +167,17 @@ export default function Topics() {
 
     const handleCreate = async () => {
         try {
+            // Create a new topic
             const created = await createTopic(newTopic);
-            setTopics([...topics, created]);
+
+            // Fetch the username for the userID of the created topic
+            const userName = await getUserNameById(created.userID);
+
+            // Add the username to the created topic and update state
+            setTopics([...topics, { ...created, userName }]);
             setNewTopic({ title: "", description: "" });
         } catch (err) {
+            console.error("Failed to create topic:", err);
             setError("Failed to create topic.");
         }
     };
@@ -170,11 +193,19 @@ export default function Topics() {
 
     const handleUpdate = async (id) => {
         try {
+            // Update the topic description
             const updated = await updateTopic(id, editingTopic);
-            setTopics(topics.map((t) => (t.id === id ? updated : t)));
-            setEditingTopic(null);
+
+            // Fetch the username for the updated topic
+            const userName = await getUserNameById(updated.userID);
+
+            // Update the topics state with the username
+            setTopics(topics.map((t) =>
+                t.id === id ? { ...updated, userName } : t
+            ));
+            setEditingTopic(null); // Exit edit mode
         } catch (err) {
-            setError("Failed to update topic.");
+            console.error("Error updating topic:", err);
         }
     };
 
@@ -235,13 +266,17 @@ export default function Topics() {
                                 <h3
                                     style={{ cursor: "pointer" }}
                                     onClick={(e) => {
-                                        e.stopPropagation(); // Prevent edit button logic interference
+                                        e.stopPropagation();
                                         navigate(`/topics/${topic.id}/posts`);
                                     }}
                                 >
                                     {topic.title}
                                 </h3>
                                 <p>{topic.description}</p>
+                                {/* Subtle "Created by" text */}
+                                <p style={{ fontSize: "0.9rem", color: "#aaa", marginTop: "0.5rem" }}>
+                                    Created by: {topic.userName || "Unknown"}
+                                </p>
                                 <div className="buttons">
                                     <button
                                         className="edit"

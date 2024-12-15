@@ -15,3 +15,12 @@ export const logout = async () => {
     await apiClient.post("/logout");
     localStorage.removeItem("token");
 };
+
+export const getUserNameById = async (userId) => {
+    try {
+        const response = await apiClient.get(`/accounts/${userId}`);
+        return response.data.userName; // Ensure correct property casing
+    } catch (error) {
+        return "Unknown";
+    }
+};

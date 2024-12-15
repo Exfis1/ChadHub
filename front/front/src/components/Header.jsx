@@ -1,31 +1,44 @@
 ﻿import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 import logo from "../assets/chadhub.png";
 
 const Header = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [username, setUsername] = useState(""); // State for username
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Check if the user is logged in by looking for the token in localStorage
         const token = localStorage.getItem("token");
-        setIsLoggedIn(!!token);
-    }, []); // Runs on mount to set the login state initially
+        if (token) {
+            setIsLoggedIn(true);
+
+            try {
+                const decoded = jwtDecode(token);
+                // Extract the username using the claim key
+                const username =
+                    decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] || "User";
+                setUsername(username);
+            } catch (err) {
+                console.error("Failed to decode token:", err);
+            }
+        }
+    }, []);
 
     const handleLogout = () => {
-        // Clear the token from localStorage
         localStorage.removeItem("token");
-        setIsLoggedIn(false); // Update the state to reflect logout
-        navigate("/"); // Redirect to the home page
+        setIsLoggedIn(false);
+        setUsername("");
+        navigate("/"); // Redirect to home
     };
 
     const styles = {
         header: {
-            width: "100%", // Make header span the full width of the page
-            position: "fixed", // Fix the topbar to the top of the page
+            width: "100%",
+            position: "fixed",
             top: 0,
             left: 0,
-            zIndex: 1000, // Ensure it appears above all other content
+            zIndex: 1000,
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
@@ -62,15 +75,11 @@ const Header = () => {
             cursor: "pointer",
             padding: 0,
         },
-        spacer: {
-            height: "70px", // Adjust the height to match the header's height
-        },
     };
 
     return (
         <>
-            {/* Spacer to push content below fixed header */}
-            <div style={styles.spacer}></div>
+            <div style={{ height: "70px" }}></div>
             <header style={styles.header}>
                 <Link to="/" style={styles.logo}>
                     <img src={logo} alt="ChadHub Logo" style={styles.logoImage} />
@@ -85,9 +94,9 @@ const Header = () => {
                     </Link>
                     {isLoggedIn ? (
                         <>
-                            <Link to="/profile" style={styles.navLink}>
-                                Profile
-                            </Link>
+                            <span style={{ color: "#ccc", fontSize: "1.2rem" }}>
+                                User: {username}
+                            </span>
                             <button onClick={handleLogout} style={styles.navButton}>
                                 Logout
                             </button>

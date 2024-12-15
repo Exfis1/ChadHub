@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { getCommentsByPost, createComment, updateComment, deleteComment } from "../services/commentsService";
 import { getPostsByTopic } from "../services/postsService";
+import { getUserNameById } from "../services/authService"; // Import function to fetch usernames
 
 const PostContainer = styled.main`
   margin-top: 3rem;
@@ -69,6 +70,12 @@ const PostContainer = styled.main`
         margin: 0;
       }
 
+      p:last-of-type {
+        font-size: 0.9rem;
+        color: #aaa;
+        margin-top: 0.5rem;
+      }
+
       .buttons {
         display: flex;
         justify-content: flex-end;
@@ -110,57 +117,73 @@ export default function PostPage() {
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState("");
     const [editingComment, setEditingComment] = useState(null);
+    const [error, setError] = useState(null);
+
 
     // Fetch post and comments
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Fetch the specific post
                 const posts = await getPostsByTopic(topicId);
                 const currentPost = posts.$values.find((p) => p.id === parseInt(postId));
                 setPost(currentPost || {});
 
-                // Fetch comments for the post
                 const commentData = await getCommentsByPost(topicId, postId);
-                setComments(commentData.$values || []);
+                const commentsWithUsernames = await Promise.all(
+                    commentData.$values.map(async (comment) => {
+                        const userName = await getUserNameById(comment.userId);
+                        return { ...comment, userName };
+                    })
+                );
+                setComments(commentsWithUsernames);
+                setError(null); // Clear error on success
             } catch (err) {
                 console.error("Error fetching data:", err);
+                setError("Failed to fetch post or comments.");
             }
         };
         fetchData();
     }, [topicId, postId]);
 
-    // Create new comment
     const handleCreateComment = async () => {
-        if (!newComment.trim()) return;
+        if (!newComment.trim()) {
+            setError("Comment cannot be empty");
+            return;
+        }
 
         try {
-            const created = await createComment(topicId, postId, { content: newComment }); // Use 'content' here
-            setComments([...comments, created]);
+            const created = await createComment(topicId, postId, { content: newComment });
+            const userName = await getUserNameById(created.userId);
+            setComments([...comments, { ...created, userName }]);
             setNewComment("");
+            setError(null); // Clear error on success
         } catch (err) {
             console.error("Error creating comment:", err);
+            setError("Failed to create comment.");
         }
     };
 
-    // Update comment
     const handleUpdateComment = async (commentId) => {
         try {
             const updated = await updateComment(topicId, postId, commentId, { content: editingComment.content });
-            setComments(comments.map((c) => (c.id === commentId ? updated : c)));
+            const userName = await getUserNameById(updated.userId);
+            setComments(comments.map((c) => (c.id === commentId ? { ...updated, userName } : c)));
             setEditingComment(null);
+            setError(null); // Clear error on success
         } catch (err) {
             console.error("Error updating comment:", err);
+            setError("Failed to update comment.");
         }
     };
 
-    // Delete comment
     const handleDeleteComment = async (commentId) => {
         try {
             await deleteComment(topicId, postId, commentId);
             setComments(comments.filter((c) => c.id !== commentId));
+            setError(null); // Clear error on success
         } catch (err) {
             console.error("Error deleting comment:", err);
+            setError("Failed to delete comment.");
         }
     };
 
@@ -178,6 +201,7 @@ export default function PostPage() {
                 ></textarea>
                 <button onClick={handleCreateComment}>Add Comment</button>
             </div>
+            {error && <p style={{ color: "red" }}>{error}</p>}
 
             {/* Comments List */}
             <ul className="comments-list">
@@ -203,6 +227,7 @@ export default function PostPage() {
                         ) : (
                             <>
                                 <p>{comment.content}</p>
+                                <p>Created by: {comment.userName || "Unknown"}</p> {/* Username display */}
                                 <div className="buttons">
                                     <button
                                         className="edit"

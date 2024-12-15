@@ -3,15 +3,23 @@ import { useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { getPostsByTopic, createPost, updatePost, deletePost } from "../services/postsService";
 import { getTopics } from "../services/topicsService";
+import { getUserNameById } from "../services/authService"; // Import the username function
+
 
 const PostsContainer = styled.main`
-  margin-top: 3rem;
+    margin-top: 3rem;
   text-align: center;
 
   h2 {
     font-size: 3rem;
     margin-bottom: 2rem;
     color: white;
+  }
+
+  ul li p:last-of-type {
+    font-size: 0.9rem;
+    color: #aaa;
+    margin-top: 0.5rem;
   }
 
   .form-container {
@@ -129,21 +137,33 @@ export default function PostsPage() {
     const [editingPost, setEditingPost] = useState(null);
     const [topicName, setTopicName] = useState("");
     const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchPosts = async () => {
             try {
                 const data = await getPostsByTopic(topicId);
-                setPosts(data.$values || []);
 
+                // Fetch usernames for posts
+                const postsWithUsernames = await Promise.all(
+                    data.$values.map(async (post) => {
+                        const userName = await getUserNameById(post.userId);
+                        return { ...post, userName };
+                    })
+                );
+                setPosts(postsWithUsernames);
+
+                // Fetch topic name
                 const topics = await getTopics();
                 const currentTopic = topics.find((t) => t.id === parseInt(topicId));
                 setTopicName(currentTopic?.title || "Unknown Topic");
             } catch (err) {
-                console.error("Error fetching posts or topic:", err);
-                setError("Failed to fetch posts or topic.");
+                console.error("Error fetching posts:", err);
+            } finally {
+                setLoading(false);
             }
         };
+
         fetchPosts();
     }, [topicId]);
 
@@ -154,8 +174,14 @@ export default function PostsPage() {
         }
 
         try {
+            // Create the new post
             const createdPost = await createPost(topicId, newPost);
-            setPosts([...posts, createdPost]);
+
+            // Fetch the username for the new post
+            const userName = await getUserNameById(createdPost.userId);
+
+            // Add the new post with the username to the state
+            setPosts([...posts, { ...createdPost, userName }]);
             setNewPost({ title: "", body: "" });
         } catch (err) {
             console.error("Error creating post:", err);
@@ -165,12 +191,19 @@ export default function PostsPage() {
 
     const handleUpdate = async (postId) => {
         try {
+            // Update the post body
             const updatedPost = await updatePost(topicId, postId, { body: editingPost.body });
-            setPosts(posts.map((p) => (p.id === postId ? updatedPost : p)));
-            setEditingPost(null);
+
+            // Fetch the username for the updated post
+            const userName = await getUserNameById(updatedPost.userId);
+
+            // Update the posts state with the username
+            setPosts(posts.map((p) =>
+                p.id === postId ? { ...updatedPost, userName } : p
+            ));
+            setEditingPost(null); // Exit edit mode
         } catch (err) {
             console.error("Error updating post:", err);
-            setError("Failed to update post.");
         }
     };
 
@@ -207,12 +240,14 @@ export default function PostsPage() {
                     </button>
                 </div>
             </div>
+            {error && <p style={{ color: "red" }}>{error}</p>}
 
             {/* Posts List */}
             <ul>
                 {posts.map((post) => (
                     <li key={post.id}>
                         {editingPost?.id === post.id ? (
+                            // Edit mode
                             <div className="form-container">
                                 <input
                                     type="text"
@@ -235,14 +270,18 @@ export default function PostsPage() {
                                 </div>
                             </div>
                         ) : (
+                            // View mode
                             <>
-                                    <h3
-                                        style={{ cursor: "pointer" }}
-                                        onClick={() => navigate(`/topics/${topicId}/posts/${post.id}`)}
-                                    >
-                                        {post.title}
-                                    </h3>
+                                <h3
+                                    style={{ cursor: "pointer" }}
+                                    onClick={() => navigate(`/topics/${topicId}/posts/${post.id}`)}
+                                >
+                                    {post.title}
+                                </h3>
                                 <p>{post.body}</p>
+                                <p style={{ fontSize: "0.9rem", color: "#aaa", marginTop: "0.5rem" }}>
+                                    Created by: {post.userName || "Unknown"}
+                                </p>
                                 <div className="buttons">
                                     <button
                                         className="edit"
@@ -259,8 +298,6 @@ export default function PostsPage() {
                     </li>
                 ))}
             </ul>
-
-            {error && <p style={{ color: "red" }}>{error}</p>}
         </PostsContainer>
     );
 }
