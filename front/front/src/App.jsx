@@ -8,6 +8,9 @@ import Topics from "./pages/Topics"; // Import Topics Component
 import Profile from "./pages/Profile"; // Optional: Import Profile Page if created
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Posts from "./pages/Posts"
+import PostPage from "./pages/PostPage";
+
 
 
 function App() {
@@ -23,6 +26,8 @@ function App() {
                         <Route path="/profile" element={<Profile />} /> {/* Use Profile Component */}
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
+                        <Route path="/topics/:topicId/posts" element={<Posts />} />
+                        <Route path="/topics/:topicId/posts/:postId" element={<PostPage />} />
                     </Routes>
                 </main>
                 <Footer />

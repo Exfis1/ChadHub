@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { getTopics, createTopic, updateTopic, deleteTopic } from "../services/topicsService";
 
@@ -15,41 +15,57 @@ const TopicsContainer = styled.main`
   }
 
   .form-container {
+  display: flex;
+  flex-direction: column; /* Align input fields vertically */
+  gap: 0.5rem;
+  margin-top: 1rem;
+
+  input,
+  textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #555;
+    border-radius: 5px;
+    background-color: #333;
+    color: white;
+    font-size: 1rem;
+  }
+
+  textarea {
+    height: 80px; /* Set a proper height for visibility */
+    resize: none;
+  }
+
+  .button-group {
     display: flex;
-    justify-content: center;
-    gap: 1rem;
-    margin-bottom: 2rem;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
 
-    input,
-    textarea {
-      width: 200px;
-      padding: 0.75rem;
-      border: 1px solid #555;
-      border-radius: 5px;
-      background-color: #333;
-      color: white;
-      font-size: 1rem;
-    }
+  button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
 
-    textarea {
-      resize: none;
-      height: 50px;
-    }
-
-    button {
-      padding: 0.75rem 1.5rem;
-      border: none;
-      border-radius: 5px;
+    &.save {
       background-color: #007bff;
-      color: white;
-      cursor: pointer;
-      transition: background 0.3s;
 
       &:hover {
         background-color: #0056b3;
       }
     }
+
+    &.cancel {
+      background-color: #6c757d;
+
+      &:hover {
+        background-color: #5a6268;
+      }
+    }
   }
+}
 
   ul {
     list-style: none;
@@ -64,8 +80,13 @@ const TopicsContainer = styled.main`
       text-align: left;
 
       h3 {
-        margin: 0 0 1rem;
+        margin: 0;
         color: #00aced;
+        cursor: pointer;
+
+        &:hover {
+          text-decoration: underline;
+        }
       }
 
       p {
@@ -84,21 +105,21 @@ const TopicsContainer = styled.main`
           color: white;
           cursor: pointer;
           transition: background 0.3s;
-        }
 
-        .edit {
-          background-color: #ffc107;
+          &.edit {
+            background-color: #ffc107;
 
-          &:hover {
-            background-color: #e0a800;
+            &:hover {
+              background-color: #e0a800;
+            }
           }
-        }
 
-        .delete {
-          background-color: #dc3545;
+          &.delete {
+            background-color: #dc3545;
 
-          &:hover {
-            background-color: #c82333;
+            &:hover {
+              background-color: #c82333;
+            }
           }
         }
       }
@@ -107,6 +128,7 @@ const TopicsContainer = styled.main`
 `;
 
 export default function Topics() {
+    const navigate = useNavigate();
     const [topics, setTopics] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -178,33 +200,69 @@ export default function Topics() {
             <ul>
                 {topics.map((topic) => (
                     <li key={topic.id}>
-                        <h3>{topic.title}</h3>
-                        <p>{topic.description}</p>
-                        <div className="buttons">
-                            <button className="edit" onClick={() => setEditingTopic(topic)}>
-                                Edit
-                            </button>
-                            <button className="delete" onClick={() => handleDelete(topic.id)}>
-                                Delete
-                            </button>
-                        </div>
-                        {editingTopic && editingTopic.id === topic.id && (
+                        {editingTopic?.id === topic.id ? (
+                            // EDIT MODE
                             <div className="form-container">
                                 <input
                                     type="text"
-                                    value={editingTopic.title}
-                                    onChange={(e) =>
-                                        setEditingTopic({ ...editingTopic, title: e.target.value })
-                                    }
+                                    value={topic.title}
+                                    disabled
+                                    style={{
+                                        backgroundColor: "#444",
+                                        color: "#999",
+                                        cursor: "not-allowed",
+                                    }}
                                 />
                                 <textarea
                                     value={editingTopic.description}
                                     onChange={(e) =>
                                         setEditingTopic({ ...editingTopic, description: e.target.value })
                                     }
+                                    placeholder="Edit Description"
                                 ></textarea>
-                                <button onClick={() => handleUpdate(topic.id)}>Save</button>
+                                <div className="button-group">
+                                    <button className="save" onClick={() => handleUpdate(topic.id)}>
+                                        Save
+                                    </button>
+                                    <button className="cancel" onClick={() => setEditingTopic(null)}>
+                                        Cancel
+                                    </button>
+                                </div>
                             </div>
+                        ) : (
+                            // VIEW MODE
+                            <>
+                                <h3
+                                    style={{ cursor: "pointer" }}
+                                    onClick={(e) => {
+                                        e.stopPropagation(); // Prevent edit button logic interference
+                                        navigate(`/topics/${topic.id}/posts`);
+                                    }}
+                                >
+                                    {topic.title}
+                                </h3>
+                                <p>{topic.description}</p>
+                                <div className="buttons">
+                                    <button
+                                        className="edit"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setEditingTopic({ id: topic.id, description: topic.description });
+                                        }}
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        className="delete"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDelete(topic.id);
+                                        }}
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+                            </>
                         )}
                     </li>
                 ))}
