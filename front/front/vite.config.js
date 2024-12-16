@@ -9,9 +9,16 @@ export default defineConfig({
         extensions: ['.mjs', '.js', '.jsx', '.json'],
     },
     build: {
-        outDir: 'build', // Change output directory to 'build'
+        outDir: "build", // Ensure output matches expected directory
         rollupOptions: {
-            external: ['react-router-dom'], // Externalize dependency if needed
+            output: {
+                entryFileNames: "[name].[hash].js",
+                chunkFileNames: "[name].[hash].js",
+                assetFileNames: "[name].[hash].[ext]",
+            },
         },
+    },
+    server: {
+        historyApiFallback: true, // Ensure fallback for client-side routing
     },
 });
