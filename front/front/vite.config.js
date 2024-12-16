@@ -9,6 +9,7 @@ export default defineConfig({
         extensions: ['.mjs', '.js', '.jsx', '.json'],
     },
     build: {
+        outDir: 'build', // Change output directory to 'build'
         rollupOptions: {
             external: ['react-router-dom'], // Externalize dependency if needed
         },
