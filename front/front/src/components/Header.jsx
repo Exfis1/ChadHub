@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
-import logo from "../assets/chadhub.png";
+import logo from "../assets/ChadHub.png";
 
 const Header = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
