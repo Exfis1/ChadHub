@@ -44,10 +44,13 @@ builder.Services.AddTransient<SessionService>();
 builder.Services.AddScoped<AuthSeeder>();
 
 // Configure EF Core to use SQL Server
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        new MySqlServerVersion(new Version(8, 0, 31)) // Specify your MySQL version here
+        connectionString,
+        new MySqlServerVersion(new Version(8, 0, 31)), // Match your MySQL version
+        mysqlOptions => mysqlOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null) // Optional retry logic
     ));
 
 builder.Services.AddIdentity<ForumUser, IdentityRole>()
