@@ -1,6 +1,6 @@
 ﻿import React, { useState, useRef } from "react";
 import styled from "styled-components";
-import logo from "../assets/stick.png";
+import logo from "../assets/Stick.png";
 import song from "../assets/daina3.mp3";
 
 const HomeContainer = styled.main`
