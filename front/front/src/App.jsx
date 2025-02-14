@@ -18,19 +18,11 @@ function App() {
         <>
             <GlobalStyles />
             <Router>
-                <Header />
                 <main>
                     <Routes>
                         <Route path="/" element={<Home />} />
-                        <Route path="/topics" element={<Topics />} /> {/* Use Topics Component */}
-                        <Route path="/profile" element={<Profile />} /> {/* Use Profile Component */}
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/register" element={<Register />} />
-                        <Route path="/topics/:topicId/posts" element={<Posts />} />
-                        <Route path="/topics/:topicId/posts/:postId" element={<PostPage />} />
                     </Routes>
                 </main>
-                <Footer />
             </Router>
         </>
     );
