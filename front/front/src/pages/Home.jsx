@@ -1,6 +1,7 @@
-﻿import React, { useState, useRef } from "react";
+﻿import React, { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import logo from "../assets/Stick.png";
+import hiddenImage from "../assets/kodas.png"; // Add your hidden image here
 import song from "../assets/daina3.mp3";
 
 const HomeContainer = styled.main`
@@ -68,9 +69,31 @@ const StyledLink = styled.a`
   }
 `;
 
+const HiddenImage = styled.img`
+  width: 300px;
+  margin-top: 20px;
+  display: ${(props) => (props.visible ? "block" : "none")}; /* Initially hidden */
+`;
+
 export default function Home() {
     const [showPrompt, setShowPrompt] = useState(true);
+    const [showImage, setShowImage] = useState(false);
     const audioRef = useRef(null);
+
+    // Function to handle keyboard shortcut (Shift + H)
+    const handleKeyPress = (event) => {
+        if (event.shiftKey && event.key.toLowerCase() === "h") {
+            setShowImage((prev) => !prev); // Toggle hidden image
+        }
+    };
+
+    // Attach event listener when component mounts
+    useEffect(() => {
+        window.addEventListener("keydown", handleKeyPress);
+        return () => {
+            window.removeEventListener("keydown", handleKeyPress);
+        };
+    }, []);
 
     const handleStart = () => {
         setShowPrompt(false); // Hide the prompt
@@ -108,6 +131,9 @@ export default function Home() {
                             🎁 50 -- DOVANA -- 50 🎁
                         </StyledLink>
                     </h3>
+
+                    {/* Hidden image that appears when Shift + H is pressed */}
+                    <HiddenImage src={hiddenImage} alt="Secret Surprise" visible={showImage} />
                 </HomeContainer>
             )}
         </>
